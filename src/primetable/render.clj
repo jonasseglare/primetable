@@ -13,12 +13,11 @@
      (:rows settings)
      (:pages settings)))
 
-(defn generate-numbers [element-count]
-  (let [v (core/make-first-factor-table (+ element-count 2))]
-    (drop 2 (map (fn [i f] {:value i
-                            :factor f})
-                 (range (count v))
-                 v))))
+(defn generate-numbers [table]
+  (drop 2 (map (fn [i f] {:value i
+                          :factor f})
+               (range (count table))
+               table)))
 
 (defn transpose-page [page]
   (apply map (cons vector (seq page))))
@@ -29,9 +28,21 @@
         (map transpose-page)))
 
 (defn make-page-data [settings]
-  (reduce
-   ((columns-per-page settings) conj)
-   []
-   (generate-numbers (element-count settings))))
+  (let [table (core/make-first-factor-table (+ (element-count settings 2)))]
+    {:page-data
+     (reduce
+      ((columns-per-page settings) conj)
+      []
+      (generate-numbers table))}
+    :table table))
 
-;(def k (make-page-data settings))
+(defn render-number [table x]
+  (if (nil? (nth table x)) x [:mathbf [::latex/arg x]]))
+
+(defn element-to-latex [table e]
+  ["$" (render-number table (:value e)) " & $ "
+   (if (nil? (:factor e))
+     (render-number table (:value e))
+     [(render-number table (:factor e)) [:cdot]
+      (render-number table (/ (:value e) (:factor e)))])
+   "$"])
