@@ -1,11 +1,12 @@
 (ns primetable.render
   (:require [primetable.core :as core]
+            [bluebell.utils.core :as utils]
             [bluebell.latex.core :as latex]))
 
 (def settings
-  {:columns 4
-   :rows 30
-   :pages 1})
+  {:columns 3
+   :rows 4
+   :pages 5})
 
 (defn element-count [settings]
   (* (:columns settings)
@@ -18,3 +19,19 @@
                             :factor f})
                  (range (count v))
                  v))))
+
+(defn transpose-page [page]
+  (apply map (cons vector (seq page))))
+
+(defn columns-per-page [settings]
+  (comp (utils/bundle (:rows settings))
+        (utils/bundle (:columns settings))
+        (map transpose-page)))
+
+(defn make-page-data [settings]
+  (reduce
+   ((columns-per-page settings) conj)
+   []
+   (generate-numbers (element-count settings))))
+
+;(def k (make-page-data settings))
