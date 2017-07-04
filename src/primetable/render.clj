@@ -1,7 +1,9 @@
 (ns primetable.render
   (:require [primetable.core :as core]
             [bluebell.utils.core :as utils]
-            [bluebell.latex.core :as latex]))
+            [bluebell.utils.string :as string]
+            [bluebell.latex.core :as latex]
+            [bluebell.latex.io-utils :as io-utils]))
 
 (def settings
   {:columns 3
@@ -54,16 +56,37 @@
 (defn row-to-latex [table row]
   (apply latex/cols (map #(element-to-latex table %) row)))
 
+
+(def col-pair "Värde & Faktorer")
+
 (defn table-header [cols]
-  "HEADER")
+  (apply latex/cols (take cols (repeat col-pair))))
 
 (defn get-cols [page]
   (count (first page)))
 
+(defn table-spec [n]
+  (string/join-strings "|" (take n (repeat  "rl"))))
+
 (defn page-to-latex [table page]
-  (apply latex/rows
-         `(~(table-header (get-cols page))
-           ~@(map #(row-to-latex table %) page))))
+  (let [cols (get-cols page)]
+    (latex/block
+     {:name "table"}
+     (latex/tabular
+      (table-spec cols)
+      (apply latex/rows
+             `(~(table-header cols)
+               ~(latex/cmd "hline")
+               ~@(map #(row-to-latex table %) page)))))))
+
+(defn make-document [data]
+  [(latex/cmd "documentclass" (latex/sq "11pt,a4paper") (latex/br "article"))
+   (latex/block
+    {:name "document"}
+    (mapv #(page-to-latex
+            (:table data)
+            %)
+          (:page-data data)))])
 
 
 (comment
@@ -72,5 +95,7 @@
   (def table (:table pd))
   (def s (page-to-latex table (first pages)))
   (println (latex/render s))
+  (println (latex/render (make-document pd)))
+  (io-utils/display (make-document pd))
 
   )
