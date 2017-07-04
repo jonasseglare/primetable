@@ -6,9 +6,9 @@
             [bluebell.latex.io-utils :as io-utils]))
 
 (def settings
-  {:columns 3
-   :rows 4
-   :pages 5})
+  {:columns 5
+   :rows 40
+   :pages 20})
 
 (defn element-count [settings]
   (* (:columns settings)
@@ -57,7 +57,7 @@
   (apply latex/cols (map #(element-to-latex table %) row)))
 
 
-(def col-pair "Värde & Faktorer")
+(def col-pair "V\\\"arde & Faktorer")
 
 (defn table-header [cols]
   (apply latex/cols (take cols (repeat col-pair))))
@@ -79,8 +79,9 @@
                ~(latex/cmd "hline")
                ~@(map #(row-to-latex table %) page)))))))
 
-(defn make-document [data]
+(defn make-document-sub [data]
   [(latex/cmd "documentclass" (latex/sq "11pt,a4paper") (latex/br "article"))
+   (latex/usepackage "a4wide")
    (latex/block
     {:name "document"}
     (mapv #(page-to-latex
@@ -88,6 +89,8 @@
             %)
           (:page-data data)))])
 
+(defn make-document [settings]
+  (make-document-sub (make-page-data settings)))
 
 (comment
   (def pd (make-page-data settings))
@@ -96,6 +99,6 @@
   (def s (page-to-latex table (first pages)))
   (println (latex/render s))
   (println (latex/render (make-document pd)))
-  (io-utils/display (make-document pd))
+  (io-utils/display (make-document settings))
 
   )
