@@ -2,6 +2,7 @@
   (:require [primetable.core :as core]
             [bluebell.utils.core :as utils]
             [bluebell.utils.string :as string]
+            [bluebell.utils.indent :as indent]
             [bluebell.latex.core :as latex]
             [bluebell.latex.io-utils :as io-utils]))
 
@@ -68,6 +69,10 @@
 (defn table-spec [n]
   (string/join-strings "|" (take n (repeat  "rl"))))
 
+(defn prefix-first-by-hline [args]
+  (cons (indent/cat "\\hline" (first args))
+        (rest args)))
+
 (defn page-to-latex [table page]
   (let [cols (get-cols page)]
     (latex/block
@@ -76,8 +81,7 @@
       (table-spec cols)
       (apply latex/rows
              `(~(table-header cols)
-               ~(latex/cmd "hline")
-               ~@(map #(row-to-latex table %) page)))))))
+               ~@(prefix-first-by-hline (map #(row-to-latex table %) page))))))))
 
 (defn make-document-sub [data]
   [(latex/cmd "documentclass" (latex/sq "10pt,a4paper,notitlepage") (latex/br "article"))
