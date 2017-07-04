@@ -28,21 +28,49 @@
         (map transpose-page)))
 
 (defn make-page-data [settings]
-  (let [table (core/make-first-factor-table (+ (element-count settings 2)))]
+  (let [table (core/make-first-factor-table
+               (+ (element-count settings) 2))]
     {:page-data
      (reduce
       ((columns-per-page settings) conj)
       []
-      (generate-numbers table))}
-    :table table))
+      (generate-numbers table))
+     :table table}))
 
 (defn render-number [table x]
-  (if (nil? (nth table x)) x [:mathbf [::latex/arg x]]))
+  (if (nil? (nth table x)) x (latex/mathbf x)))
 
 (defn element-to-latex [table e]
-  ["$" (render-number table (:value e)) " & $ "
+  (latex/cols
+   (latex/inline-math (render-number table (:value e)))
    (if (nil? (:factor e))
-     (render-number table (:value e))
-     [(render-number table (:factor e)) [:cdot]
-      (render-number table (/ (:value e) (:factor e)))])
-   "$"])
+     "---"
+     (latex/inline-math
+      (latex/spaced
+       (render-number table (:factor e))
+       (latex/cmd "cdot")
+       (render-number table (/ (:value e) (:factor e))))))))
+
+(defn row-to-latex [table row]
+  (apply latex/cols (map #(element-to-latex table %) row)))
+
+(defn table-header [cols]
+  "HEADER")
+
+(defn get-cols [page]
+  (count (first page)))
+
+(defn page-to-latex [table page]
+  (apply latex/rows
+         `(~(table-header (get-cols page))
+           ~@(map #(row-to-latex table %) page))))
+
+
+(comment
+  (def pd (make-page-data settings))
+  (def pages (:page-data pd))
+  (def table (:table pd))
+  (def s (page-to-latex table (first pages)))
+  (println (latex/render s))
+
+  )
