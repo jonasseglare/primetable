@@ -7,7 +7,7 @@
 
 (def settings
   {:columns 5
-   :rows 40
+   :rows 50
    :pages 20})
 
 (defn element-count [settings]
@@ -80,7 +80,7 @@
                ~@(map #(row-to-latex table %) page)))))))
 
 (defn make-document-sub [data]
-  [(latex/cmd "documentclass" (latex/sq "11pt,a4paper") (latex/br "article"))
+  [(latex/cmd "documentclass" (latex/sq "10pt,a4paper,notitlepage") (latex/br "article"))
    (latex/usepackage "a4wide")
    (latex/block
     {:name "document"}
